@@ -1,0 +1,25 @@
+{
+  "name": "simple-angular-panel",
+  "version": "1.0.0",
+  "description": "Simple Angular Grafana",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch"
+  },
+  "author": "Grafana Labs",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@grafana/data": "next",
+    "@grafana/toolkit": "next",
+    "@grafana/ui": "next",
+    "@types/grafana": "github:CorpGlory/types-grafana.git"
+  },
+  "dependencies": {
+    "ace-builds": "^1.4.8",
+    "brace": "^0.11.1",
+    "net": "^1.0.2",
+    "socket.io": "^2.3.0"
+  }
+}

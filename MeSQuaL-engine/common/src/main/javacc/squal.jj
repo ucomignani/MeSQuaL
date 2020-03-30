@@ -1,0 +1,582 @@
+/*     mesqual.jj - JavaCC Grammar for the SQuaL language.
+ *
+ *     This file is part of MeSQuaL.
+ *
+ *     MeSQuaL is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     MeSQuaL is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with MeSQuaL. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+options {
+  JDK_VERSION = "1.8";
+  static = false;
+  DEBUG_TOKEN_MANAGER=false;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  GENERATE_GENERICS=true;
+}
+
+PARSER_BEGIN(SQualParser)
+package squalParser;
+
+import UDFCalls.UDFLanguage;
+
+import database.*;
+import databaseManagement.ConnectionParameters;
+import databaseManagement.DatabaseConnection;
+import databaseManagement.SqualElementsManager;
+import java.io.StringReader;
+import java.util.List;
+import java.util.ArrayList;
+
+//@SuppressWarnings({"unused","serial"})
+public class SQualParser{
+
+  private static ConnectionParameters connectionParameters = null;
+
+  public static void parse(String inputString) throws ParseException
+  {
+      StringReader in = new StringReader(inputString);
+      SQualParser squalParser=new SQualParser(in);
+
+        // TODO: Add final level when finished
+  }
+
+  public static void parse(String inputString, ConnectionParameters inputConnectionParameters) throws ParseException
+  {
+      StringReader in = new StringReader(inputString);
+      SQualParser squalParser=new SQualParser(in);
+
+      connectionParameters = inputConnectionParameters;
+
+     // TODO: Add final level when finished
+  }
+}
+PARSER_END(SQualParser)
+
+/** Comments starts with -- and finish at the end of the line */
+SKIP:
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"--" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}
+
+TOKEN [ IGNORE_CASE ]: /* SQuaL KEYWORDS */
+{
+ < QWITH: "QWITH">
+| < CREATE: "CREATE" >
+| < REPLACE: "REPLACE" >
+| < DELETE: "DELETE" >
+| < CONTRACT_TYPE: "CONTRACTTYPE" >
+| < CONTRACT: "CONTRACT" >
+| < FUNCTION: "FUNCTION" >
+| < LANGUAGE: "LANGUAGE" >
+| < BY: "BY">
+| < ON: "ON" >
+//| < AS: "AS">
+| < SELECT: "SELECT" >
+// | < #FROM: "FROM" >
+}
+
+TOKEN : /* SQuaL KEYWORDS */
+{
+ < AS: "AS">
+}
+
+
+TOKEN : /* RAW SQL STATEMENT */
+{
+   < RAW_SQL_STATEMENT: <SELECT> (~["{","}"])* >
+}
+
+TOKEN : /* RAW SQL STATEMENT */
+{
+   < STRING: "as" (~["{","}"])+ >
+}
+
+TOKEN : {
+  < L_PAR: "(" >
+| < R_PAR: ")" >
+| < DOT: "." >
+| < COMMA: "," >
+| < SEMI_COLON: ";" >
+
+}
+
+TOKEN [ IGNORE_CASE ]: /* BOOLEAN */
+{
+ < TRUE: "TRUE" >
+| < FALSE: "FALSE" >
+}
+
+TOKEN [ IGNORE_CASE ]: /* OPERATORS */
+{
+  < EQ: "=" >
+| < NEQ: ( "!=" | "<>" ) >
+| < GT: ">" >
+| < GEQ: ">=" >
+| < LT: "<" >
+| < LEQ: "<=" >
+| < AND: ( "AND" | "&&" ) >
+| < OR: ( "OR" | "||" ) >
+| < NOT: "NOT" >
+}
+
+TOKEN [ IGNORE_CASE ]: /* SCOPES */
+{
+ <CELL: "CELL">
+ |<ROW: "ROW">
+ |<COLUMN: "COLUMN">
+ |<TABLE: "TABLE">
+ |<DATABASE: "DATABASE">
+}
+
+TOKEN [ IGNORE_CASE ]: /* SQL TYPES */
+{
+  <INT: "INT">
+  |<FLOAT: ("FLOAT"|"DOUBLE"|"DECIMAL")>
+  |<VARCHAR: ("VARCHAR"|"TEXT")>
+  |<BLOB: "BLOB">
+}
+
+TOKEN [ IGNORE_CASE ]: /* LANGUAGES */
+{
+  <PYTHON: "PYTHON">
+  |<SQL: "SQL">
+}
+TOKEN :
+{
+   <SQLTOKEN   : (["a"-"z","A"-"Z","_"])(["a"-"z","A"-"Z","_","0"-"9"])* >
+|  <STRING_LITERAL : ("\"" (["a"-"z","A"-"Z","/","-",".","_","(",")","0"-"9"," ",",","!","|","'",":","~"])+ "\"")
+             | ("'" (["a"-"z","A"-"Z","/","-",".","_","(",")","0"-"9"," ",",","!","|","'",":","~"])+ "'")>
+|  <DECIMAL_LITERAL : (["0"-"9"]("."["0"-"9"])?)+ >
+}
+
+SQuaLScript squalScript(SqualElementsManager squalElementsManager, DimensionMap dimensionMap, ContractMap contractMap):
+{
+    ContractType contractType = null;
+    Contract contract = null;
+    QwithQuery qwithQuery = null;
+    List<SQuaLScriptBlock> squalScriptBlocksList = new ArrayList<SQuaLScriptBlock>();
+}
+{
+    (
+        LOOKAHEAD(2) contractType = contractType()
+            {
+                squalScriptBlocksList.add(new SQuaLScriptBlock(contractType));
+            }
+        | contract = contract()
+            {
+                squalScriptBlocksList.add(new SQuaLScriptBlock(contract));
+            }
+        | qwithQuery = qwithQuery()
+            {
+                squalScriptBlocksList.add(new SQuaLScriptBlock(qwithQuery));
+            }
+    )+
+    {
+        return new SQuaLScript(squalScriptBlocksList, dimensionMap, contractMap, squalElementsManager);
+    }
+}
+
+QwithQuery qwithQuery():
+{
+    String sqlQuery = "";
+    Token part1 = null;
+    Token part2 = null;
+    Token part3 = null;
+    QwithConstraints qwithConstraints2 = null;
+    QwithConstraints qwithConstraints = null;
+    List<QwithQuery> qwithSubQueries = new ArrayList<QwithQuery>();
+}
+{
+    ("{"  //sqlQuery=
+    part1=<RAW_SQL_STATEMENT>
+    ("{" part2=<RAW_SQL_STATEMENT> "}" <QWITH> qwithConstraints2=qwithConstraints())?
+    (")"  (<AND>)? part3=<STRING>)?
+    "}")?
+    <QWITH> qwithConstraints=qwithConstraints()
+    <SEMI_COLON>
+    {
+        sqlQuery += part1.image;
+        if(part2!=null){
+            sqlQuery += part2.image + ")";
+            QwithQuery newQuery = new QwithQuery(true, part2.image, qwithConstraints2, null);
+            qwithSubQueries.add(newQuery);
+        }
+        if(part3!= null){
+            sqlQuery += part3.image;
+        }
+        if(sqlQuery != null){
+            System.out.println("SQL: " + sqlQuery);
+            // String sqlQueryWithoutBraces = sqlQuery.image.substring(1,sqlQuery.image.length()-1);
+            return new QwithQuery(true, sqlQuery, qwithConstraints);
+        }
+
+        return new QwithQuery(false, null, qwithConstraints, qwithSubQueries);
+    }
+}
+
+QwithConstraints qwithConstraints():
+{
+    Constraint constraint=null;
+    Token contractName=null;
+    QwithConstraints constraintList = new QwithConstraints();
+}
+{
+    (LOOKAHEAD(2) constraint=constraint()
+        {
+            constraintList.addConstraint(constraint);
+        }
+     | contractName=<SQLTOKEN>
+        {
+            constraintList.addContractName(contractName.image);
+        }
+    )
+    (
+        <AND>
+        (LOOKAHEAD(2) constraint=constraint()
+             {
+                constraintList.addConstraint(constraint);
+             }
+        | contractName=<SQLTOKEN>
+             {
+                constraintList.addContractName(contractName.image);
+             }
+        )
+    )*
+
+    {
+        return constraintList;
+    }
+}
+
+ContractType contractType():
+{
+   Token createOrReplace, contract_type_name;
+   Dimension dimension=null;
+   ArrayList<Dimension> dimensionList = new ArrayList<Dimension >();
+}
+{
+  (createOrReplace=<CREATE>|createOrReplace=<REPLACE>) <CONTRACT_TYPE> contract_type_name=<SQLTOKEN>
+  <L_PAR> dimension=dimension(contract_type_name.image)
+   {
+     dimensionList.add(dimension);
+   }
+  (<COMMA>  dimension=dimension(contract_type_name.image)
+   {
+     dimensionList.add(dimension);
+   }
+  )*
+  <R_PAR><SEMI_COLON>
+
+  {
+    boolean isReplace = false;
+    if(createOrReplace.image.toUpperCase().startsWith("R"))
+      	isReplace = true;
+    return new ContractType(isReplace, contract_type_name.image, dimensionList);
+  }
+}
+
+
+Dimension dimension(String contract_type_name):
+{
+    Token dimension_name, function_path;
+    SqlType outputType;
+    Scope db_element;
+    UDFLanguage language = null;
+}
+{
+    dimension_name=<SQLTOKEN>
+    // outputType=SQL_datatype()
+    // <ON>
+    // db_element=DB_element()
+    <BY> <FUNCTION>
+    function_path=<STRING_LITERAL>
+    <LANGUAGE>
+    language=language()
+    {
+        String functionPath = function_path.image.replace("\"", "").replace("'", "");
+        return new Dimension(contract_type_name, new Name(dimension_name.image), language, functionPath);
+    }
+}
+
+UDFLanguage language():
+{
+}
+{
+    (<PYTHON> {return UDFLanguage.PYTHON;}
+    |<SQL> {return UDFLanguage.SQL;})
+}
+
+Scope DB_element():
+{
+    Token targetName, targetName2 = null;
+}
+{
+    (<CELL> targetName=<SQLTOKEN> ("." targetName2=<SQLTOKEN>)? {return new Scope(ScopeLevel.CELL,
+                                                                        targetName2==null ? new Name(targetName.image) : new Name(targetName.image + "." + targetName2.image));}
+    |<ROW> targetName=<SQLTOKEN> ("." targetName2=<SQLTOKEN>)? {return new Scope(ScopeLevel.ROW,
+                                                                        targetName2==null ? new Name(targetName.image) : new Name(targetName.image + "." + targetName2.image));}
+    |<COLUMN> targetName=<SQLTOKEN> ("." targetName2=<SQLTOKEN>)? {return new Scope(ScopeLevel.COLUMN,
+                                                                        targetName2==null ? new Name(targetName.image) : new Name(targetName.image + "." + targetName2.image));}
+    |<TABLE> targetName=<SQLTOKEN> ("." targetName2=<SQLTOKEN>)? {return new Scope(ScopeLevel.TABLE,
+                                                                        targetName2==null ? new Name(targetName.image) : new Name(targetName.image + "." + targetName2.image));}
+    |<DATABASE> {return new Scope(ScopeLevel.DATABASE);}
+    )
+}
+
+SqlType SQL_datatype():
+{
+
+}
+{
+    (
+     <INT> {return SqlType.INT;}
+    |<FLOAT> {return SqlType.FLOAT;}
+    |<VARCHAR> {return SqlType.VARCHAR;}
+    |<BLOB> {return SqlType.BLOB;}
+    )
+}
+
+Contract contract():
+{
+   Token createOrReplace, contract_name, contract_type_name;
+   ArrayList<Constraint> constraintList = new ArrayList<Constraint >();
+   ArrayList<ContractTypeName > contractTypeNameList = new ArrayList<ContractTypeName >();
+   Constraint constraint;
+   ContractTypeName contractTypeName;
+}
+{
+  (createOrReplace=<CREATE>|createOrReplace=<REPLACE>) <CONTRACT> contract_name=<SQLTOKEN>
+//  <FROM> contractTypeName=contract_type_name()
+//    {
+//        contractTypeNameList.add(contractTypeName);
+//    }
+//  (<COMMA> contractTypeName=contract_type_name()
+//    {
+//        contractTypeNameList.add(contractTypeName);
+//    }
+// )*
+  <L_PAR> constraint=constraint()
+   {
+     constraintList.add(constraint);
+   }
+  (<AND>  constraint=constraint()
+   {
+     constraintList.add(constraint);
+   }
+  )+
+  <R_PAR><SEMI_COLON>
+
+  {
+    boolean isReplace = false;
+    if(createOrReplace.image.toUpperCase().startsWith("R"))
+      	isReplace = true;
+    return new Contract(isReplace, contract_name.image, contractTypeNameList, constraintList);
+  }
+}
+
+ContractTypeName contract_type_name():
+{
+    Token schema_name=null,  ctype_name = null;
+}
+{
+    ctype_name=<SQLTOKEN >
+    {
+	    return new ContractTypeName( null, ctype_name.image);
+    }
+}
+
+ComparisonExpression comparisonExpression():
+{
+    StringLiteral stringLeft=null, stringRight=null;
+    ComparisonOperator comparisonOp=null;
+}
+{
+    (
+      (
+        stringLeft=stringLiteral()
+        comparisonOp=comparisonOperator()
+        stringRight=stringLiteral()
+      )
+        {
+            return new ComparisonExpression(comparisonOp,stringLeft,stringRight);
+        }
+    )
+}
+
+ComparisonOperator comparisonOperator():
+{
+}
+{
+  (
+    <EQ>
+        {
+          return ComparisonOperator.EQUAL;
+        }
+    | <NEQ>
+        {
+          return ComparisonOperator.NOT_EQUAL;
+        }
+    | <GT>
+        {
+          return ComparisonOperator.GREATER;
+        }
+    | <GEQ>
+        {
+          return ComparisonOperator.GREATER_OR_EQUAL;
+        }
+    | <LT>
+        {
+          return ComparisonOperator.LESSER;
+        }
+    | <LEQ>
+        {
+          return ComparisonOperator.LESSER_OR_EQUAL;
+        }
+  )
+}
+
+BinaryBooleanExpression binaryBooleanExpression():
+{
+    BooleanExpression blLeft=null, blRight=null;
+    BooleanOperator boolOp=null;
+}
+{
+    (
+      (
+        LOOKAHEAD(3) blLeft=booleanLiteral()
+      | LOOKAHEAD(3) blLeft=comparisonExpression()
+      | LOOKAHEAD(3) blLeft=unaryBooleanExpression()
+      )
+
+       boolOp=binaryBooleanOperator()
+
+      (
+        LOOKAHEAD(3) blRight=booleanLiteral()
+      | LOOKAHEAD(2) blRight=comparisonExpression()
+      | LOOKAHEAD(2) blRight=unaryBooleanExpression()
+      | blRight=binaryBooleanExpression()
+      )
+        {
+            return new BinaryBooleanExpression(boolOp,blLeft,blRight);
+        }
+    )
+}
+
+UnaryBooleanExpression unaryBooleanExpression():
+{
+    BooleanOperator boolOp=null;
+    BooleanExpression boolExpression=null;
+}
+{
+      (
+         boolOp=unaryBooleanOperator()
+        (LOOKAHEAD(2)<L_PAR>)?
+        (
+          LOOKAHEAD(2) boolExpression=booleanLiteral()
+        | LOOKAHEAD(2) boolExpression=comparisonExpression()
+        | LOOKAHEAD(2) boolExpression=unaryBooleanExpression()
+        | boolExpression=binaryBooleanExpression()
+        )
+        (LOOKAHEAD(2)<R_PAR>)?
+        {
+            return new UnaryBooleanExpression(boolOp,boolExpression);
+        }
+      )
+}
+
+Constraint constraint():
+{
+    Token dimension_name=null;
+    ContractTypeName ctype_name = null;
+    BooleanExpression compared_value=null;
+    ComparisonOperator comparison_op=null;
+
+}
+{
+    (
+      (
+        ctype_name=contract_type_name()<DOT> dimension_name=<SQLTOKEN>
+        comparison_op=comparisonOperator()
+        (compared_value=stringLiteral() | compared_value=booleanLiteral())
+      )
+        {
+           return new Constraint(comparison_op,ctype_name,dimension_name.image,compared_value);
+        }
+    )
+}
+
+
+BooleanLiteral booleanLiteral():
+{
+}
+{
+  (
+    <TRUE>
+    {
+      return new BooleanLiteral(true);
+    }
+    | (<FALSE>)
+    {
+      return new BooleanLiteral(false);
+    }
+
+  )
+
+}
+
+BooleanOperator binaryBooleanOperator():
+{
+}
+{
+  (
+    <OR>
+    {
+      return BooleanOperator.OR;
+    }
+    | (<AND> | <COMMA> )
+    {
+      return BooleanOperator.AND;
+    }
+  )
+}
+
+BooleanOperator unaryBooleanOperator():
+{
+}
+{
+  (
+    <NOT>
+    {
+      return BooleanOperator.NOT;
+    }
+  )
+}
+
+StringLiteral stringLiteral():
+{
+    Token literal = null;
+}
+{
+  (
+    (literal = <STRING_LITERAL> | literal = <DECIMAL_LITERAL>)
+    {
+      return new StringLiteral(literal.image);
+    }
+  )
+
+}
