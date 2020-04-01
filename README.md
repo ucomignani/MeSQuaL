@@ -4,7 +4,7 @@ MeSQuaL is a system for profiling and checking data quality before further tasks
 
 The system includes: (1) a query interpreter for SQuaL, the SQL-extended language we propose for declaring and querying data with data quality checks and statistical tests; (2) an extensible library of user-defined functions for profiling the data and computing various data quality indicators; and (3) a user interface for declaring data quality constraints, profiling data, monitoring data quality with SQuaL queries, and visualizing the results via data quality dashboards. We showcase our system in action with various scenarios on real-world data sets and show its usability for monitoring data quality over time and checking the quality of data on-demand.
 
-.. image:: ./docs/images/archi.pdf
+![MeSQuaL architecture](docs/images/archi.png)
 
 
 **For more details**
@@ -12,10 +12,12 @@ The system includes: (1) a query interpreter for SQuaL, the SQL-extended languag
 Please cite and refer to the demo presented at EDBT 2020 Conference:
 
 - Ugo Comignani, Noël Novelli, Laure Berti-Équille:
-Data Quality Checking for Machine Learning with MeSQuaL. EDBT 2020: 591-594 `Preprint <https://github.com/ucomignani/MeSQuaL/tree/master/docs/publications/paper-241.pdf>`__ 
+Data Quality Checking for Machine Learning with MeSQuaL. EDBT 2020: 591-594 [Preprint](docs/publications/paper-241.pdf)
 
 **Demo Videos**
-
+* [Contract type and contract instance declaration](demo/videos/declaration_MeSQuaL.mp4)
+* [Querying data with data quality constraints and statistical tests](demo/videos/query_MeSQuaL.mp4)
+* [Monitoring data quality](demo/videos/monitoring_MeSQuaL.mp4)
 
 ## Installation
 
