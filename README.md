@@ -9,7 +9,8 @@ The system includes: (1) a query interpreter for SQuaL, the SQL-extended languag
 
 **For more details**, please refer to the demo presented at EDBT 2020 Conference
 
-- Laure Berti-Equille. Learn2Clean: Optimizing the Sequence of Tasks for Web Data Preparation. Proceedings of the Web Conf 2019, San Francisco, May 2019. `Preprint <https://github.com/ucomignani/MeSQuaL/tree/master/docs/publications/edbt2020-preprint.pdf>`__ 
+- Ugo Comignani, Noël Novelli, Laure Berti-Équille:
+Data Quality Checking for Machine Learning with MeSQuaL. EDBT 2020: 591-594 `Preprint <https://github.com/ucomignani/MeSQuaL/tree/master/docs/publications/paper-241.pdf>`__ 
 
 ## Installation
 
