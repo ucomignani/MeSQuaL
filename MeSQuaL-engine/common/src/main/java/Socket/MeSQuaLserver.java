@@ -21,7 +21,7 @@ package Socket;
 public class MeSQuaLserver {
 
     public static void main(String[] args) {
-        System.out.println("<program>  Copyright (C) <year>  <name of author>\n"
+        System.out.println("MeSQuaL  Copyright (C) 2019  U.Comignani\n"
                 + "This program comes with ABSOLUTELY NO WARRANTY.\n"
                 + "This is free software, and you are welcome to redistribute it under certain conditions; see GNU GPL v3 for details.");
         new Socket.WebsocketServer().start();
