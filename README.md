@@ -50,12 +50,22 @@ mvn install -DskipTests
 
 #### Installing the visualization platform
 
-At first, copy the querying interface plugin in the dedicated directory(/var/lib/grafana/plugins/ by default). For example, on linux systems run:
+At first, copy the querying interface plugin in the dedicated directory(/var/lib/grafana/plugins/ by default) and compile it.
+For example, on linux systems run:
 ```
 cp -R ./MeSQuaL-visualization/MeSQuaL-query-grafana-panel/ /var/lib/grafana/plugins/
+cd /var/lib/grafana/plugins/MeSQuaL-query-grafana-panel/
+npm install
+yarn build
 ```
 
 Then, in Grafana use the "Import" function and paste the content of the json file [grafana-dashboard-setting.json](MeSQuaL-visualization/grafana-dashboard-setting.json) to import the MeSQuaL dashboard.
+
+If Grafana cannot load the querying plugin, then run:
+```
+npx npm-force-resolutions
+npm install
+```
 
 ## Deployment
 Launch MeSQuaL engine by running:
