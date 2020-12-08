@@ -1,4 +1,4 @@
-# MeSQuaL: profiling and checking data quality declaratively with extended SQL
+# MeSQuaL: Profiling and checking data quality declaratively with extended SQL
 
 MeSQuaL is a system for profiling and checking data quality before further tasks, such as data analytics and machine learning. MeSQuaL extends SQL for querying relational data with constraints on data quality and facilitates the verification of statistical tests. 
 
