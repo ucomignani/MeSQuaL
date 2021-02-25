@@ -36,50 +36,66 @@ import java.sql.Statement;
 
 public class SQuaLqueryEngine {
     private static SQualParser squalParser = new SQualParser(new StringReader(" "));
-    private ConnectionParameters connectionParameters =
-            new ConnectionParameters("com.mysql.cj.jdbc.Driver",
-                    "localhost",
-                    3306,
-                    "root",
-                    "rootPassword",
-                    "Edbt2020",
-                    "UTC");
+    private ConnectionParameters connectionParameters = null;
     private DatabaseConnection databaseConnection = null;
 
     private Path workingDirectoryPath = Paths.get("");  //System.getProperty("user.dir"));
 
 
-    public SQuaLqueryEngine() {
+    public SQuaLqueryEngine() throws Exception {
+        this.connectionParameters = getDefaultConnectionParameters();
         createDatabaseConnection(this.connectionParameters);
     }
 
-    public SQuaLqueryEngine(ConnectionParameters connectionParameters) {
+    public SQuaLqueryEngine(ConnectionParameters connectionParameters) throws Exception {
         this.connectionParameters = connectionParameters;
         createDatabaseConnection(connectionParameters);
     }
 
-    public boolean changeConnection(ConnectionParameters newConnectionParameters) {
+    public ConnectionParameters getDefaultConnectionParameters(){
+        return new ConnectionParameters("com.mysql.cj.jdbc.Driver",
+                "localhost",
+                3306,
+                "root",
+                "rootPassword",
+                "Edbt2020",
+                "UTC");
+    }
+
+    public boolean changeConnection(ConnectionParameters newConnectionParameters) throws Exception {
         this.connectionParameters = newConnectionParameters;
+        closeDatabaseConnection();
         createDatabaseConnection(newConnectionParameters);
 
         return true;
     }
 
-    private boolean createDatabaseConnection(ConnectionParameters connectionParameters) {
+    public ConnectionParameters getConnectionParameters(){
+        return this.connectionParameters;
+    }
+
+    private boolean createDatabaseConnection(ConnectionParameters connectionParameters) throws Exception {
         switch (connectionParameters.getDriverName()) {
             case "com.mysql.cj.jdbc.Driver":
-                try {
+                //try {
                     this.databaseConnection = new MysqlDatabaseConnection(connectionParameters);
-                } catch (Exception e) {
-                    System.out.println("Database connection: " + e);
-                    return false;
-                }
+                //} catch (Exception e) {
+                //    System.out.println("Database connection: " + e);
+                //    return false;
+                //}
                 break;
             default:
                 this.databaseConnection = null;
                 return false;
         }
         return true;
+    }
+
+    private void closeDatabaseConnection() {
+        if (this.databaseConnection != null)
+            this.databaseConnection.close();
+        else
+            System.out.println("No connection to close.");
     }
 
     public QWithResults executeQuery(String queryString) {

@@ -51,7 +51,13 @@ public class WebsocketServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
         System.out.println("Message from client: " + message);
-        SQuaLqueryEngine qe = new SQuaLqueryEngine();
+        SQuaLqueryEngine qe = null;
+        try {
+            qe = new SQuaLqueryEngine();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         qe.executeQuery(message);
     }
 

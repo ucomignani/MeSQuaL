@@ -21,23 +21,36 @@ package GUI;
 import Socket.SQuaLqueryEngine;
 import database.DataTable;
 import database.QWithResults;
+import databaseManagement.ConnectionParameters;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
-public class MeSQaL {
+public class MeSQaL extends JPanel implements ChangeListener {
+
+    /**
+     * main part of the GUI
+     */
+    JFrame frame = new JFrame("MeSQuaL");
+    private JPanel mainJPanel;
+
     /**
      * Main engine
      */
-    private SQuaLqueryEngine squalQueryEngine = new SQuaLqueryEngine();
+    private SQuaLqueryEngine squalQueryEngine;
 
-    /**
-     * GUI
-     */
-    private JPanel mainJPanel;
+    {
+        try {
+            squalQueryEngine = new SQuaLqueryEngine();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            JOptionPane.showMessageDialog(frame, exception);
+        }
+    }
 
     /*****
      * QUERIES
@@ -75,6 +88,11 @@ public class MeSQaL {
     private JPanel settingButtonsJPanel;
 
     public MeSQaL() {
+
+        /**
+         * use a change listener to detect panel selection
+         */
+        queryPanel.addChangeListener(this);
 
         /**
          * Query tab
@@ -121,6 +139,104 @@ public class MeSQaL {
          */
         queryAndPrintResultInJTable("SELECT * FROM CONTRACTTYPE;", contractTypeJTable);
 
+        /**
+         * DBMS settings tab
+         */
+        // set new settings
+        applyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ConnectionParameters cp = createConnectionParametersFromFields();
+                try {
+                    squalQueryEngine.changeConnection(cp);
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, exception);
+                }
+            }
+        });
+
+        // reset fields to default values
+        resetToDefaultButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fillDbmsFiels(squalQueryEngine.getDefaultConnectionParameters());
+            }
+        });
+    }
+
+    public void stateChanged(ChangeEvent e) {
+        JTabbedPane tabbedPane = (JTabbedPane) e.getSource();
+        int selectedIndex = tabbedPane.getSelectedIndex();
+
+        switch (selectedIndex) {
+
+            case 0:
+                /**
+                 * Query tab
+                 */
+                queryAndPrintResultInJTable("SELECT * FROM MeSQuaLqueries;", queriesHistoryJTable);
+                break;
+            case 1:
+
+                /**
+                 * Results panel
+                 */
+                queryAndPrintResultInJTable("SELECT * FROM MeSQuaLresults;", sqlResultsJTable);
+                break;
+            case 2:
+                /**
+                 * Queries history panel
+                 */
+                queryAndPrintResultInJTable("SELECT * FROM MeSQuaLqueries;", queriesHistoryTabJTable);
+                break;
+            case 3:
+                /**
+                 * Contract panel
+                 */
+                queryAndPrintResultInJTable("SELECT * FROM CONTRACT;", contractJTable);
+                break;
+            case 4:
+                /**
+                 * Contract type history panel
+                 */
+                queryAndPrintResultInJTable("SELECT * FROM CONTRACTTYPE;", contractTypeJTable);
+                break;
+            case 5:
+                /**
+                 * DBMS settings tab
+                 */
+                ConnectionParameters curConnectionParameters = squalQueryEngine.getConnectionParameters();
+                // fill fields with current values when tab is selected
+                fillDbmsFiels(curConnectionParameters);
+                break;
+            default:
+                try {
+                    throw new Exception("Unknown tab number in StateChanged.");
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                }
+        }
+    }
+
+    private void fillDbmsFiels(ConnectionParameters curConnectionParameters) {
+        this.driverJTextField.setText(curConnectionParameters.getDriverName());
+        this.hostJTextField.setText(curConnectionParameters.getHost());
+        this.portJTextField.setText(Integer.toString(curConnectionParameters.getPort()));
+        this.usernameJTextField.setText(curConnectionParameters.getUsername());
+        this.passwordJText.setText(curConnectionParameters.getPassword());
+        this.databaseNameJTextField.setText(curConnectionParameters.getDbName());
+        this.timeZoneJTextField.setText(curConnectionParameters.getServerTimezone());
+    }
+
+    private ConnectionParameters createConnectionParametersFromFields() {
+        return new ConnectionParameters(this.driverJTextField.getText(),
+                this.hostJTextField.getText(),
+                Integer.parseInt(this.portJTextField.getText()),
+                this.usernameJTextField.getText(),
+                this.passwordJText.getPassword().toString(),
+                this.databaseNameJTextField.getText(),
+                this.timeZoneJTextField.getText());
     }
 
     private void clearQueryTest() {
