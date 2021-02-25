@@ -37,8 +37,13 @@ import java.sql.Statement;
 public class SQuaLqueryEngine {
     private static SQualParser squalParser = new SQualParser(new StringReader(" "));
     private ConnectionParameters connectionParameters =
-            new ConnectionParameters("com.mysql.cj.jdbc.Driver", "localhost", 3306,
-                    "root", "rootPassword", "Edbt2020", "UTC");
+            new ConnectionParameters("com.mysql.cj.jdbc.Driver",
+                    "localhost",
+                    3306,
+                    "root",
+                    "rootPassword",
+                    "Edbt2020",
+                    "UTC");
     private DatabaseConnection databaseConnection = null;
 
     private Path workingDirectoryPath = Paths.get("");  //System.getProperty("user.dir"));
@@ -48,19 +53,35 @@ public class SQuaLqueryEngine {
         createDatabaseConnection(this.connectionParameters);
     }
 
-    private void createDatabaseConnection(ConnectionParameters connectionParameters) {
+    public SQuaLqueryEngine(ConnectionParameters connectionParameters) {
+        this.connectionParameters = connectionParameters;
+        createDatabaseConnection(connectionParameters);
+    }
+
+    public boolean changeConnection(ConnectionParameters newConnectionParameters) {
+        this.connectionParameters = newConnectionParameters;
+        createDatabaseConnection(newConnectionParameters);
+
+        return true;
+    }
+
+    private boolean createDatabaseConnection(ConnectionParameters connectionParameters) {
         switch (connectionParameters.getDriverName()) {
             case "com.mysql.cj.jdbc.Driver":
                 try {
                     this.databaseConnection = new MysqlDatabaseConnection(connectionParameters);
                 } catch (Exception e) {
                     System.out.println("Database connection: " + e);
+                    return false;
                 }
                 break;
             default:
                 this.databaseConnection = null;
+                return false;
         }
+        return true;
     }
+
     public QWithResults executeQuery(String queryString) {
         // exec time
         long startTime = System.nanoTime();
@@ -76,13 +97,13 @@ public class SQuaLqueryEngine {
         try {
             squalScript = squalParser.squalScript(sem, new DimensionMap(), new ContractMap());
         } catch (ParseException e) {
-            System.out.println("Parse exception: " +  e);
+            System.out.println("Parse exception: " + e);
         }
 
         try {
             qWithResults = squalScript.evaluate(workingDirectoryPath);
         } catch (Exception e) {
-            System.out.println("SQuaL exception: " +  e);
+            System.out.println("SQuaL exception: " + e);
         }
         // exec time
         long stopTime = System.nanoTime();
@@ -107,7 +128,7 @@ public class SQuaLqueryEngine {
             return dtOut;
 
         } catch (SQLException e) {
-            System.out.println("Parse exception: " +  e);
+            System.out.println("Parse exception: " + e);
         }
 
         return null;

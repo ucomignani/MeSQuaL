@@ -21,25 +21,22 @@ package GUI;
 import Socket.SQuaLqueryEngine;
 import database.DataTable;
 import database.QWithResults;
-import database.SQLResult;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.Vector;
 
 public class MeSQaL {
+    /**
+     * Main engine
+     */
+    private SQuaLqueryEngine squalQueryEngine = new SQuaLqueryEngine();
+
+    /**
+     * GUI
+     */
     private JPanel mainJPanel;
 
     /*****
@@ -59,10 +56,25 @@ public class MeSQaL {
     private JTable sqlResultsJTable;
     private JTable udfResultsJTable;
     private JTable queriesHistoryJTable;
+    private JTable queriesHistoryTabJTable;
     private JPanel queriesHistoryJPanel;
+    private JPanel contractJPanel;
+    private JPanel contractTypeJPanel;
+    private JTable contractJTable;
+    private JTable contractTypeJTable;
+    private JButton applyButton;
+    private JButton resetToDefaultButton;
+    private JPasswordField passwordJText;
+    private JTextField driverJTextField;
+    private JTextField hostJTextField;
+    private JTextField portJTextField;
+    private JTextField usernameJTextField;
+    private JTextField databaseNameJTextField;
+    private JTextField timeZoneJTextField;
+    private JPanel settingJPanel;
+    private JPanel settingButtonsJPanel;
 
     public MeSQaL() {
-
 
         /**
          * Query tab
@@ -97,6 +109,17 @@ public class MeSQaL {
          * Queries history panel
          */
         queryAndPrintResultInJTable("SELECT * FROM MeSQuaLqueries;", queriesHistoryJTable);
+        queryAndPrintResultInJTable("SELECT * FROM MeSQuaLqueries;", queriesHistoryTabJTable);
+
+        /**
+         * Contract panel
+         */
+        queryAndPrintResultInJTable("SELECT * FROM CONTRACT;", contractJTable);
+
+        /**
+         * Contract type history panel
+         */
+        queryAndPrintResultInJTable("SELECT * FROM CONTRACTTYPE;", contractTypeJTable);
 
     }
 
@@ -109,8 +132,7 @@ public class MeSQaL {
         String queryString = queryText.getText();
         System.out.println("Query string :" + queryString);
 
-        SQuaLqueryEngine qe = new SQuaLqueryEngine();
-        QWithResults qWithQueryResult = qe.executeQuery(queryString);
+        QWithResults qWithQueryResult = squalQueryEngine.executeQuery(queryString);
 
         // print SQL query results in Results tab
         queryAndPrintResultInJTable("SELECT * FROM UDFresults;", udfResultsJTable);
@@ -118,8 +140,7 @@ public class MeSQaL {
     }
 
     private void queryAndPrintResultInJTable(String query, JTable jtable) {
-        SQuaLqueryEngine sqe = new SQuaLqueryEngine();
-        DataTable dt = sqe.executeSqlQuery(query);
+        DataTable dt = squalQueryEngine.executeSqlQuery(query);
         jtable.setModel(buildTableModel(dt));
     }
 
