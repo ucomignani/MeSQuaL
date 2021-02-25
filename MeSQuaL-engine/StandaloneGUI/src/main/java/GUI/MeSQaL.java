@@ -58,6 +58,8 @@ public class MeSQaL {
     private JPanel results;
     private JTable sqlResultsJTable;
     private JTable udfResultsJTable;
+    private JTable queriesHistoryJTable;
+    private JPanel queriesHistoryJPanel;
 
     public MeSQaL() {
 
@@ -85,10 +87,16 @@ public class MeSQaL {
         results.setLayout(new GridLayout());
         //results.add(pieChart.getChartPanel(), BorderLayout.CENTER);
         results.validate();
+
         /**
-         * Result tab
+         * Results panel
          */
 
+
+        /**
+         * Queries history panel
+         */
+        queryAndPrintResultInJTable("SELECT * FROM MeSQuaLqueries;", queriesHistoryJTable);
 
     }
 

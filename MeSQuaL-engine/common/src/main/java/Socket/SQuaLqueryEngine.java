@@ -99,7 +99,7 @@ public class SQuaLqueryEngine {
 
         try {
             Statement sqlStatement = this.databaseConnection.getConnection().createStatement();
-            ResultSet sqlResultSet = sqlStatement.executeQuery("SELECT * FROM MeSQuaLresults");
+            ResultSet sqlResultSet = sqlStatement.executeQuery(queryString);
             DataTable dtOut = new DataTable(sqlResultSet);
             sqlResultSet.close();
             sqlStatement.close();
