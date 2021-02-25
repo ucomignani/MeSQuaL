@@ -80,12 +80,12 @@ public class SQuaLScriptTest {
 
 // Test QWith query execution
         squalParser.ReInit(new StringReader("REPLACE CONTRACTTYPE ct1(" +
-                "comp FLOAT ON DATABASE BY FUNCTION '../UDF_scripts/completeness.py' LANGUAGE Python" +
+                "comp BY FUNCTION '../UDF_scripts/completeness.py' LANGUAGE Python" +
                 ");" +
                 "REPLACE CONTRACT testNonDeclaredContract " +
-                "(ct1.comp > 0.5 AND ct1.toto >= 50));" +
+                "(ct1.comp > 0.5 AND ct1.toto >= 50);" +
                 "REPLACE CONTRACT completeness " +
-                "(ct1.comp > 0.5 AND ct1.toto >= 50));" +
+                "(ct1.comp > 0.5 AND ct1.toto >= 50);" +
                 "{ SELECT * FROM A, B WHERE A.a > 1 OR B.f IS NULL} " +
                 "QWITH completeness AND ct1.toto >= 50 AND ct1.comp = 0.6;"));
         MysqlDatabaseConnection c = null;

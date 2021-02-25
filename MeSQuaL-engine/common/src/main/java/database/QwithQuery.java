@@ -303,7 +303,7 @@ public class QwithQuery {
         }
     }
 
-    private SQLResult executeSqlQuery(DatabaseConnection dbConnection, Path outputCsvPath) {
+    private SQLResult executeSqlQuery(DatabaseConnection dbConnection, Path outputCsvPath) throws SQLException {
         List<Path> paths = new ArrayList<Path>();
         paths.add(outputCsvPath);
 

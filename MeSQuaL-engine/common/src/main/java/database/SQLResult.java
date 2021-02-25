@@ -19,23 +19,24 @@ package database;
 
 import java.nio.file.Path;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 public class SQLResult {
-    private ResultSet sqlQueryResults;
+    private DataTable sqlQueryResults;
     private List<Path> outputFilesPaths;
 
-    public SQLResult(ResultSet sqlQueryResults, List<Path> paths) {
-        this.sqlQueryResults = sqlQueryResults;
+    public SQLResult(ResultSet sqlQueryResults, List<Path> paths) throws SQLException {
+        this.sqlQueryResults = new DataTable(sqlQueryResults);
         this.outputFilesPaths = paths;
     }
 
-    public ResultSet getSqlQueryResults() {
+    public DataTable getSqlQueryResults() {
         return sqlQueryResults;
     }
 
-    public void setSqlQueryResults(ResultSet sqlQueryResults) {
-        this.sqlQueryResults = sqlQueryResults;
+    public void setSqlQueryResults(ResultSet sqlQueryResults) throws SQLException {
+        this.sqlQueryResults = new DataTable(sqlQueryResults);
     }
 
     public List<Path> getOutputFilesPaths() {

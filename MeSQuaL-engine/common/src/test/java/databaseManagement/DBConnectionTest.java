@@ -183,14 +183,14 @@ public class DBConnectionTest {
         SqualElementsManager squalElementsManager = new SqualElementsManager(connection);
 
         squalParser.ReInit(new StringReader("CREATE CONTRACTTYPE ct1(" +
-                "comp FLOAT ON DATABASE BY FUNCTION '../UDF_scripts/completeness.py' LANGUAGE Python" +
+                "comp BY FUNCTION '../UDF_scripts/completeness.py' LANGUAGE Python" +
                 ");" +
                 "CREATE CONTRACT testNonDeclaredContract " +
                 "(comp > 0.5 AND toto >= 50));" +
                 "CREATE CONTRACT completeness " +
                 "(comp > 0.5 AND toto >= 50));" +
                 "{ SELECT * From Patient; } " +
-                "QWITH completeness AND toto >= 50 AND comp = 0.6;"));
+                "QWITH (completeness AND toto >= 50 AND comp = 0.6);"));
 
         try {
             squalScript = squalParser.squalScript(squalElementsManager, new DimensionMap(), new ContractMap());

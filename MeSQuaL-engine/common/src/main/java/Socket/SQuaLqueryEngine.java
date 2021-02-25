@@ -17,10 +17,7 @@
 
 package Socket;
 
-import database.ContractMap;
-import database.DimensionMap;
-import database.QWithResults;
-import database.SQuaLScript;
+import database.*;
 import databaseManagement.ConnectionParameters;
 import databaseManagement.DatabaseConnection;
 import databaseManagement.MysqlDatabaseConnection;
@@ -28,13 +25,14 @@ import databaseManagement.SqualElementsManager;
 import squalParser.ParseException;
 import squalParser.SQualParser;
 
-import javax.swing.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class SQuaLqueryEngine {
     private static SQualParser squalParser = new SQualParser(new StringReader(" "));
@@ -63,7 +61,7 @@ public class SQuaLqueryEngine {
                 this.databaseConnection = null;
         }
     }
-    public void executeQuery(String queryString) {
+    public QWithResults executeQuery(String queryString) {
         // exec time
         long startTime = System.nanoTime();
 
@@ -89,5 +87,29 @@ public class SQuaLqueryEngine {
         // exec time
         long stopTime = System.nanoTime();
         System.out.println("executeQuery, exec time: " + (stopTime - startTime));
+
+        return qWithResults;
+    }
+
+    public DataTable executeSqlQuery(String queryString) {
+        // exec time
+        long startTime = System.nanoTime();
+
+        DataTable sqlResults = null;
+
+        try {
+            Statement sqlStatement = this.databaseConnection.getConnection().createStatement();
+            ResultSet sqlResultSet = sqlStatement.executeQuery("SELECT * FROM MeSQuaLresults");
+            DataTable dtOut = new DataTable(sqlResultSet);
+            sqlResultSet.close();
+            sqlStatement.close();
+
+            return dtOut;
+
+        } catch (SQLException e) {
+            System.out.println("Parse exception: " +  e);
+        }
+
+        return null;
     }
 }
