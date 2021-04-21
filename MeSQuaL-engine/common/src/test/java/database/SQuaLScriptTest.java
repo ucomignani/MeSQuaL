@@ -63,6 +63,9 @@ import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class SQuaLScriptTest {
 
     private Path workingDirectoryPath = Paths.get(System.getProperty("user.dir"));
@@ -93,6 +96,7 @@ public class SQuaLScriptTest {
             c = new MysqlDatabaseConnection(connectionParameters);
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection");
         }
         SqualElementsManager sem = new SqualElementsManager(c);
 
@@ -109,9 +113,20 @@ public class SQuaLScriptTest {
 
             squalScript = squalParser.squalScript(sem, new DimensionMap(), new ContractMap());
             try {
-                squalScript.evaluate(workingDirectoryPath);
+                SQuaLScript finalSqualScript = squalScript;
+                String expectedExceptionMessage = "Dimension toto does not exists in the declared dimensions.";
+
+                Exception exception = assertThrows(SQuaLException.class, () -> {
+                    finalSqualScript.evaluate(workingDirectoryPath);
+                });
+
+                String expectedMessage = expectedExceptionMessage;
+                String actualMessage = exception.getMessage();
+
+                assertTrue(actualMessage.contains(expectedMessage));
             } catch (Exception e) {
                 e.printStackTrace();
+                Assertions.fail("Problem during evaluation");
             }
 
         } catch (ParseException e) {

@@ -82,7 +82,7 @@ public class QwithQuery {
         return dbConnection.submitQuery(sqlQuery);
     }
 
-    public QWithResults executeQuery(Path workingDirectoryPath, DatabaseConnection dbConnection, DimensionMap dimMap, ContractMap contractMap) throws Exception {
+    public QWithResults executeQuery(Path workingDirectoryPath, DatabaseConnection dbConnection, DimensionMap dimMap, ContractMap contractMap) throws SQuaLException, SQLException {
         // query timestamp
         Date date = new Date();
         Timestamp timestamp = new Timestamp(date.getTime());
@@ -252,7 +252,7 @@ public class QwithQuery {
         }
     }
 
-    private void executeQwithContracts(String queryId, Path workingDirectoryPath, DatabaseConnection dbConnection, DimensionMap dimMap, ContractMap contractMap, String queryUUID, List<Path> csvPaths) throws Exception {
+    private void executeQwithContracts(String queryId, Path workingDirectoryPath, DatabaseConnection dbConnection, DimensionMap dimMap, ContractMap contractMap, String queryUUID, List<Path> csvPaths) throws SQuaLException{
         for (String contractName : this.getQwithConstraints().getContractNames()) {
             System.err.println("Contract eval: " + contractName);
 
@@ -267,12 +267,12 @@ public class QwithQuery {
                                 + contractName + "_" + cons.getDimension_name() + queryUUID + ".json");
                         evaluateDimension(queryId, workingDirectoryPath, dbConnection, csvPaths, cons, currentDimension, outputFilePath);
                     } else {
-                        throw new Exception("Dimension " + cons.getDimension_name()
+                        throw new SQuaLException("Dimension " + cons.getDimension_name()
                                 + " does not exists in the declared dimensions.");
                     }
                 }
             } else {
-                throw new Exception("Contract " + contractName
+                throw new SQuaLException("Contract " + contractName
                         + " does not exists in the declared contracts.");
             }
         }

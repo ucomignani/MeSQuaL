@@ -44,8 +44,9 @@ public class QWithSubQueryTest {
 
 
         // Test QWith query execution
-        squalParser.ReInit(new StringReader("{ SELECT * FROM A WHERE A.a IN ({SELECT * FROM Ap} QWITH ct1.completeness > 0.5) AND Test}" +
-                "QWITH ct1.completeness > 0.5 AND ct1.toto >= 50;"));
+        squalParser.ReInit(new StringReader("{ SELECT * FROM A " +
+                "WHERE A.a IN {{SELECT * FROM Ap} QWITH ct1.completeness > 0.5 AND Test}" +
+                "} QWITH ct1.completeness > 0.5 AND ct1.toto >= 50;"));
         MysqlDatabaseConnection c = new MysqlDatabaseConnection(connectionParameters);
 
         Dimension dimension = new Dimension("ct1", new Name("completeness"), new Scope(ScopeLevel.DATABASE),
@@ -55,31 +56,28 @@ public class QWithSubQueryTest {
         ContractMap contMap = new ContractMap();
         dimMap.put(dimension.getDimensionName().getName(), dimension);
 
+        c.submitDataManipulation("DROP TABLE A");
+        c.submitDataManipulation("DROP TABLE Ap");
+
+        c.submitDataManipulation("CREATE TABLE A(a INTEGER, b VARCHAR(255), c FLOAT)");
+        c.submitDataManipulation("INSERT INTO A VALUES(1, \"Test\", 12.6)");
+        c.submitDataManipulation("INSERT INTO A VALUES(2, \"Test2\", 0.6)");
+        c.submitDataManipulation("INSERT INTO A VALUES(2, NULL, 0.6)");
+        c.submitDataManipulation("INSERT INTO A VALUES(3, NULL, 0.6)");
+
+        c.submitDataManipulation("CREATE TABLE Ap(d INTEGER)");
+        c.submitDataManipulation("INSERT INTO Ap VALUES(1)");
+        c.submitDataManipulation("INSERT INTO Ap VALUES(2)");
+
         try {
-            c.submitDataManipulation("DROP TABLE A");
-            c.submitDataManipulation("DROP TABLE Ap");
-
             qWithQuery = squalParser.qwithQuery();
-
-            c.submitDataManipulation("CREATE TABLE A(a INTEGER, b VARCHAR(255), c FLOAT)");
-            c.submitDataManipulation("INSERT INTO A VALUES(1, \"Test\", 12.6)");
-            c.submitDataManipulation("INSERT INTO A VALUES(2, \"Test2\", 0.6)");
-            c.submitDataManipulation("INSERT INTO A VALUES(2, NULL, 0.6)");
-            c.submitDataManipulation("INSERT INTO A VALUES(3, NULL, 0.6)");
-
-            c.submitDataManipulation("CREATE TABLE Ap(d INTEGER)");
-            c.submitDataManipulation("INSERT INTO Ap VALUES(1)");
-            c.submitDataManipulation("INSERT INTO Ap VALUES(2)");
-
             qWithQuery.executeQuery(workingDirectoryPath, c, dimMap, contMap);
-
-
         } catch (ParseException e) {
             e.printStackTrace();
             Assertions.fail("Problem during execution of a Qwith query." + e);
         } finally {
-           //c.submitDataManipulation("DROP TABLE A");
-           //c.submitDataManipulation("DROP TABLE Ap");
+            //c.submitDataManipulation("DROP TABLE A");
+            //c.submitDataManipulation("DROP TABLE Ap");
             c.close();
         }
     }

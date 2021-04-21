@@ -118,9 +118,10 @@ public class Dimension {
 
     public SQLString toSQLString() {
         StringBuilder query = new StringBuilder();
-        query.append(this.dimensionName.toSQLString().getQueryString()).append(" ")
-                .append(this.functionOutputType)
-                .append(" ON ").append(this.dimensionScope.toSQLString().getQueryString())
+        query.append(this.dimensionName.toSQLString().getQueryString())
+                // .append(" ")
+                // .append(this.functionOutputType)
+                // .append(" ON ").append(this.dimensionScope.toSQLString().getQueryString())
                 .append(" BY FUNCTION ").append(this.functionName)
                 .append(" LANGUAGE ").append(this.functionUdfLanguage);
         return new SQLString(query.toString());

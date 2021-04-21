@@ -20,6 +20,7 @@ package database;
 import UDFCalls.UDFLanguage;
 import databaseManagement.ConnectionParameters;
 import databaseManagement.MysqlDatabaseConnection;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -42,6 +43,7 @@ public class DimensionTest {
             connection = new MysqlDatabaseConnection(connectionParameters);
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection");
         }
 
         ArrayList<Path> inputFiles = new ArrayList<>();

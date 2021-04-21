@@ -19,6 +19,7 @@ package databaseManagement;
 
 import database.ContractMap;
 import database.DimensionMap;
+import database.SQuaLException;
 import database.SQuaLScript;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DBConnectionTest {
 
@@ -79,6 +82,7 @@ public class DBConnectionTest {
             runBoolTest(connection.getConnection());
         } catch (SQLException e) {
             e.printStackTrace();
+            Assertions.fail("SQL exception");
         }
 
         connection.close();
@@ -95,6 +99,7 @@ public class DBConnectionTest {
             connection = new MysqlDatabaseConnection(connectionParameters);
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection.");
         }
 
         try {
@@ -115,6 +120,7 @@ public class DBConnectionTest {
                     "root", "rootPassword", "sensor", "UTC");
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection.");
         }
 
         connection.submitDataManipulation("DROP TABLE IF EXISTS Patient");
@@ -134,6 +140,7 @@ public class DBConnectionTest {
                     "root", "rootPassword", "sensor", "UTC");
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection.");
         }
 
         String tableName = "Patient";
@@ -176,6 +183,7 @@ public class DBConnectionTest {
                     "root", "rootPassword", "sensor", "UTC");
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection");
         }
 
         SQualParser squalParser = new SQualParser(new StringReader(" "));
@@ -186,21 +194,32 @@ public class DBConnectionTest {
                 "comp BY FUNCTION '../UDF_scripts/completeness.py' LANGUAGE Python" +
                 ");" +
                 "CREATE CONTRACT testNonDeclaredContract " +
-                "(comp > 0.5 AND toto >= 50));" +
+                "(Ct.comp > 0.5 AND Ct.toto >= 50);" +
                 "CREATE CONTRACT completeness " +
-                "(comp > 0.5 AND toto >= 50));" +
+                "(Ct.comp > 0.5 AND Ct.toto >= 50);" +
                 "{ SELECT * From Patient; } " +
-                "QWITH (completeness AND toto >= 50 AND comp = 0.6);"));
+                "QWITH completeness AND Ct.toto >= 50 AND Ct.comp = 0.6;"));
 
         try {
             squalScript = squalParser.squalScript(squalElementsManager, new DimensionMap(), new ContractMap());
         } catch (ParseException e) {
             e.printStackTrace();
+            Assertions.fail("Problem during parsing");
         }
+
         try {
-            squalScript.evaluate(workingDirectoryPath);
+            SQuaLScript finalSqualScript = squalScript;
+            String expectedExceptionMessage = "Dimension toto does not exists in the declared dimensions.";
+
+            Exception exception = assertThrows(SQuaLException.class, () -> {
+                finalSqualScript.evaluate(workingDirectoryPath);
+            });
+
+            String expectedMessage = expectedExceptionMessage;
+            String actualMessage = exception.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during evaluation");
         }
         ResultSet results = connection.submitQuery("SELECT * FROM Patient");
 
@@ -230,6 +249,7 @@ public class DBConnectionTest {
                     "root", "rootPassword", "sensor", "UTC");
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection");
         }
 
         SQualParser squalParser = new SQualParser(new StringReader(" "));
@@ -237,18 +257,27 @@ public class DBConnectionTest {
         SqualElementsManager squalElementsManager = new SqualElementsManager(connection);
 
         squalParser.ReInit(new StringReader("{ SELECT * From Patient;} " +
-                "QWITH completeness AND toto >= 50 AND comp = 0.6;"));
+                "QWITH completeness AND Ct.toto >= 50 AND Ct.comp = 0.6;"));
 
         try {
             squalScript = squalParser.squalScript(squalElementsManager, new DimensionMap(), new ContractMap());
         } catch (ParseException e) {
             e.printStackTrace();
+            Assertions.fail("Problem during parsing");
         }
         try {
             assert squalScript != null;
-            squalScript.evaluate(workingDirectoryPath);
-        } catch (Exception e) {
+            SQuaLScript finalSqualScript = squalScript;
+            String expectedExceptionMessage = "Dimension toto does not exists in the declared dimensions.";
+
+            Exception exception = assertThrows(SQuaLException.class, () -> {
+                finalSqualScript.evaluate(workingDirectoryPath);
+            });
+
+            String expectedMessage = expectedExceptionMessage;
+            String actualMessage = exception.getMessage();        } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during parsing");
         }
         assert connection != null;
         ResultSet results = connection.submitQuery("SELECT * FROM Patient");

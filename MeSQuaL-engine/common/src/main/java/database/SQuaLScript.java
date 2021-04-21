@@ -68,7 +68,7 @@ public class SQuaLScript {
         this.squalScriptBlocksList = squalScriptBlocksList;
     }
 
-    public QWithResults evaluate(Path workingDirectoryPath) throws Exception {
+    public QWithResults evaluate(Path workingDirectoryPath) throws SQuaLException, SQLException {
         if (this.dimensionMap == null) {
             System.err.println("Needs a dimension map to evaluate a SQuaL script");
         } else {
@@ -85,7 +85,7 @@ public class SQuaLScript {
                                 this.dimensionMap.put(dimensionName.getName(), dim);
                                 squalElementsManager.addContractType(contractType);
                             } else {
-                                throw new Exception("Dimension " + dimensionName.getName() + " already exists." +
+                                throw new SQuaLException("Dimension " + dimensionName.getName() + " already exists." +
                                         " Please create your ContractType using REPLACE instead of CREATE " +
                                         "if you want to replace the old definition.");
                             }
@@ -100,7 +100,7 @@ public class SQuaLScript {
                             this.contractMap.put(contract.getContractName(), contract);
                             squalElementsManager.addContract(contract);
                         } else {
-                            throw new Exception("Contract " + contract.getContractName() + " already exists." +
+                            throw new SQuaLException("Contract " + contract.getContractName() + " already exists." +
                                     " Please create your Contract using REPLACE instead of CREATE " +
                                     "if you want to replace the old definition.");
                         }

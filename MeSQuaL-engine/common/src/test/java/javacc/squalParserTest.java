@@ -209,20 +209,23 @@ public class squalParserTest {
 
         try {
 
-            squalParser.ReInit(new StringReader("CREATE CONTRACT contractTest " +
-                    "FROM tab.ctype1, tab.ctype2 ( " +
-                    "Const_1 = TRUE " +
-                    "AND NOT(Const2 >= 1) );"));
-            Assertions.assertEquals("CREATE CONTRACT contractTest " +
-                            "FROM tab.ctype1, tab.ctype2 (Const_1 = TRUE AND NOT(Const2 >= 1));",
-                    squalParser.contract().toSQLString().getQueryString());
-
-            squalParser.ReInit(new StringReader("CREATE CONTRACT contractTest " +
-                    "FROM tab.ctype1, tab.ctype2 ( " +
-                    "Const_1 = TRUE " +
-                    "AND Const2 >= 1 );"));
+            squalParser.ReInit(new StringReader("CREATE CONTRACT TestDB ( StatTests.autocorrelation > 0 );"));
             System.out.println(squalParser.contract().toSQLString().getQueryString());
 
+            squalParser.ReInit(new StringReader("CREATE CONTRACT contractTest " +
+                    "( Const1.test = TRUE " +
+                    "AND Const2.test >= 1 );"));
+            System.out.println(squalParser.contract().toSQLString().getQueryString());
+
+            // TODO: introduce NOT for constraints.
+            // Corresponding test:
+            /* squalParser.ReInit(new StringReader("CREATE CONTRACT contractTest " +
+                    "( Const1.test = TRUE " +
+                    "AND NOT(Const2.test >= 1) );"));
+            Assertions.assertEquals("CREATE CONTRACT contractTest " +
+                            "(Const1.test = TRUE AND NOT(Const2.test >= 1));",
+                    squalParser.contract().toSQLString().getQueryString());
+            */
         } catch (ParseException e) {
             Assertions.fail("Problem during parsing of a contract." + e);
         }
@@ -234,8 +237,8 @@ public class squalParserTest {
 
         try {
 
-            squalParser.ReInit(new StringReader("dimA VARCHAR ON ROW A.b BY FUNCTION '~/test/testFun.extension' LANGUAGE Python"));
-            Assertions.assertEquals("dimA VARCHAR ON ROW A.b BY FUNCTION '~/test/testFun.extension' LANGUAGE PYTHON",
+            squalParser.ReInit(new StringReader("dimA BY FUNCTION '~/test/testFun.extension' LANGUAGE Python"));
+            Assertions.assertEquals("dimA BY FUNCTION ~/test/testFun.extension LANGUAGE PYTHON",
                     squalParser.dimension("ct1").toSQLString().getQueryString());
 
         } catch (ParseException e) {
@@ -250,11 +253,11 @@ public class squalParserTest {
         try {
 
             squalParser.ReInit(new StringReader("CREATE CONTRACTTYPE testCT(" +
-                    "dimA VARCHAR ON ROW A.b BY FUNCTION '~/test/testFun.extension' LANGUAGE Python," +
-                    "dimB INT ON CELL A.b BY FUNCTION './test/testFun.extension' LANGUAGE SQL);"));
+                    "dimA BY FUNCTION '~/test/testFun.extension' LANGUAGE Python," +
+                    "dimB BY FUNCTION './test/testFun.extension' LANGUAGE SQL);"));
             Assertions.assertEquals("CREATE CONTRACTTYPE testCT (" +
-                            "dimA VARCHAR ON ROW A.b BY FUNCTION '~/test/testFun.extension' LANGUAGE Python," +
-                            "dimB INT ON CELL A.b BY FUNCTION './test/testFun.extension' LANGUAGE SQL);",
+                            "dimA BY FUNCTION ~/test/testFun.extension LANGUAGE Python," +
+                            "dimB BY FUNCTION ./test/testFun.extension LANGUAGE SQL);",
                     squalParser.contractType().toSQLString().getQueryString());
 
         } catch (ParseException e) {
@@ -271,10 +274,10 @@ public class squalParserTest {
         try {
 
             squalParser.ReInit(new StringReader(complexSQLQuery
-                    + " QWITH test = 22 AND toto >= 50;"));
+                    + " QWITH Ct.test = 22 AND Ct.toto >= 50;"));
             qWithQuery = squalParser.qwithQuery();
 
-            Assertions.assertEquals("{SELECT * FrOm Patient, Admission WheRe Patient.test = true AND Patient.id = Admission.PatientId} QWITH test = 22, toto >= 50;",
+            Assertions.assertEquals("{SELECT * FrOm Patient, Admission WheRe Patient.test = true AND Patient.id = Admission.PatientId} QWITH Ct.test = 22 AND Ct.toto >= 50;",
                     qWithQuery.toSQLString().getQueryString());
 
         } catch (ParseException e) {
@@ -283,20 +286,20 @@ public class squalParserTest {
 
 
         // Test SQL query execution
-        squalParser.ReInit(new StringReader("{ SELECT a, b, c FROM A WHERE TRUE} QWITH test = 22 AND toto >= 50;"));
+        squalParser.ReInit(new StringReader("{ SELECT a, b, c FROM A WHERE TRUE} QWITH Ct.test = 22 AND Ct.toto >= 50;"));
         MysqlDatabaseConnection c = null;
         try {
             c = new MysqlDatabaseConnection(connectionParameters);
         } catch (Exception e) {
             e.printStackTrace();
+            Assertions.fail("Problem during connection");
         }
         try {
-            qWithQuery = squalParser.qwithQuery();
-
             c.submitDataManipulation("CREATE TABLE A(a INTEGER, b VARCHAR(255), c FLOAT)");
             c.submitDataManipulation("INSERT INTO A VALUES(1, \"Test\", 12.6)");
             c.submitDataManipulation("INSERT INTO A VALUES(2, \"Test2\", 0.6)");
 
+            qWithQuery = squalParser.qwithQuery();
             ResultSet rs = qWithQuery.executeMySqlQuery(c);
 
             while (rs.next()) {
@@ -309,8 +312,10 @@ public class squalParserTest {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            Assertions.fail("SQL exception.");
         } catch (ParseException e) {
             e.printStackTrace();
+            Assertions.fail("Problem during parsing.");
         } finally {
             c.submitDataManipulation("DROP TABLE A");
             c.close();

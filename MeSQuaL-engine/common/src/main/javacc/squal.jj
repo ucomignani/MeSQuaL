@@ -202,17 +202,18 @@ QwithQuery qwithQuery():
     List<QwithQuery> qwithSubQueries = new ArrayList<QwithQuery>();
 }
 {
-    ("{"  //sqlQuery=
-    part1=<RAW_SQL_STATEMENT>
-    ("{" part2=<RAW_SQL_STATEMENT> "}" <QWITH> qwithConstraints2=qwithConstraints())?
-    (")"  (<AND>)? part3=<STRING>)?
-    "}")?
+    ("{"
+        part1=<RAW_SQL_STATEMENT>
+        ("{{" part2=<RAW_SQL_STATEMENT> "}" <QWITH> qwithConstraints2=qwithConstraints() "}")?
+        (part3=<STRING> )?
+     "}"
+    )?
     <QWITH> qwithConstraints=qwithConstraints()
     <SEMI_COLON>
     {
         sqlQuery += part1.image;
         if(part2!=null){
-            sqlQuery += part2.image + ")";
+            sqlQuery += "(" + part2.image + ")";
             QwithQuery newQuery = new QwithQuery(true, part2.image, qwithConstraints2, null);
             qwithSubQueries.add(newQuery);
         }
@@ -308,7 +309,7 @@ Dimension dimension(String contract_type_name):
     <LANGUAGE>
     language=language()
     {
-        String functionPath = function_path.image.replace("\"", "").replace("'", "");
+        String functionPath = function_path.image.replace("\u201c", "").replace("'", "");
         return new Dimension(contract_type_name, new Name(dimension_name.image), language, functionPath);
     }
 }
@@ -378,7 +379,7 @@ Contract contract():
    {
      constraintList.add(constraint);
    }
-  )+
+  )*
   <R_PAR><SEMI_COLON>
 
   {
